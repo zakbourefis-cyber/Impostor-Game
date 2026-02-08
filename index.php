@@ -40,8 +40,6 @@ if (!isset($_SESSION['user_id'])) {
         <button class="btn-primary" onclick="window.location.href='create_game.php'">Créer une partie</button>
         <button class="btn-secondary" onclick="window.location.href='join_game.php'">Rejoindre une partie</button>
         
-        <br><br>
-        <a href="logout.php" class="btn-danger" style="display:block; padding:10px; border-radius:5px;">Déconnexion</a>
     </div>
 </body>
 </html>
