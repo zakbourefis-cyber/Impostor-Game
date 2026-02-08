@@ -1,0 +1,189 @@
+/* IMPORTATION DE LA POLICE (Comme Wolfy, très lisible) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
+
+:root {
+    /* PALETTE DE COULEURS "MYSTERY" */
+    --bg-dark: #0f0c29;
+    --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    --primary: #8e44ad; /* Violet mystique */
+    --accent: #00d4ff;  /* Bleu électrique pour les actions */
+    --danger: #ff4b5c;
+    --text: #ffffff;
+    --glass: rgba(255, 255, 255, 0.1); /* Effet verre */
+    --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--bg-gradient);
+    background-attachment: fixed; /* Le fond ne bouge pas quand on scroll */
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- HEADER MINIMALISTE (MOBILE FRIENDLY) --- */
+header {
+    width: 100%;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between; /* Espace entre logo et profil */
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2); /* Très léger fond */
+    backdrop-filter: blur(5px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+/* --- MODIFICATION DU HEADER --- */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espace entre le pseudo et la porte */
+}
+
+.logout-btn-icon {
+    color: var(--danger); /* Le rouge défini plus haut */
+    font-size: 1.5rem;    /* Taille de l'icône */
+    text-decoration: none;
+    transition: transform 0.2s ease, color 0.2s;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.logout-btn-icon:hover {
+    transform: scale(1.2); /* Petit effet de zoom au survol */
+    color: #ff0000;        /* Rouge plus vif */
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: -webkit-linear-gradient(#00d4ff, #8e44ad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* Texte dégradé */
+}
+
+.user-pill {
+    background: var(--glass);
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- CONTENEUR PRINCIPAL STYLE "CARTE FLOTTANTE" --- */
+.container {
+    background: var(--glass);
+    backdrop-filter: blur(16px); /* LE FLOU DERRIÈRE LA CARTE */
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    width: 90%;
+    max-width: 450px; /* Un peu plus large pour respirer */
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    animation: floatIn 0.8s ease-out;
+}
+
+/* --- ÉLÉMENTS UI --- */
+h1 { margin-bottom: 0.5rem; font-weight: 800; }
+h2, h3 { font-weight: 600; }
+p { color: #ccc; font-size: 0.95rem; line-height: 1.5; }
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.3);
+    color: white;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+    transition: 0.3s;
+    text-align: center;
+    font-size: 1rem;
+}
+
+input:focus {
+    border-color: var(--accent);
+    outline: none;
+    background: rgba(0,0,0,0.5);
+}
+
+button, .btn-primary, .btn-secondary, .btn-danger {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 10px;
+    transition: 0.3s;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.btn-primary { 
+    background: linear-gradient(45deg, #8e44ad, #c0392b); 
+    color: white; 
+    box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(142, 68, 173, 0.6); }
+
+.btn-secondary { background: transparent; border: 2px solid rgba(255,255,255,0.2); color: white; }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: white; }
+
+.btn-danger { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; }
+
+/* --- VISUEL AVATAR (CERCLES) --- */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-right: 10px;
+    border: 2px solid white;
+}
+
+/* --- ANIMATION D'ENTRÉE --- */
+@keyframes floatIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- SPECIFIQUE CHAT & LISTE --- */
+ul { list-style: none; padding: 0; }
+li { 
+    background: rgba(255,255,255,0.05); 
+    padding: 12px; 
+    margin: 8px 0; 
+    border-radius: 10px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+}
