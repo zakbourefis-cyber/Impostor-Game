@@ -187,3 +187,119 @@ li {
     align-items: center; 
     justify-content: space-between;
 }
+
+/* --- LOGO EN IMAGE --- */
+.logo-img {
+    height: 50px; /* Ajuste la hauteur selon ton image */
+    width: auto;  /* Garde les proportions */
+    transition: transform 0.3s ease;
+    display: block; /* Évite les espaces fantômes sous l'image */
+}
+
+.logo-img:hover {
+    transform: scale(1.1); /* Petit effet de zoom au survol */
+    filter: drop-shadow(0 0 5px rgba(0, 212, 255, 0.5)); /* Lueur bleue */
+}
+
+/* --- NOUVEAU DESIGN JEU (game.php) --- */
+
+/* 1. Carte de Rôle Modernisée */
+.role-card-modern {
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Variante Imposteur (Rouge sombre transparent) */
+.role-impostor {
+    background: linear-gradient(135deg, rgba(255, 75, 92, 0.2), rgba(100, 0, 0, 0.4));
+    border: 1px solid rgba(255, 75, 92, 0.5);
+}
+
+/* Variante Civil (Bleu sombre transparent) */
+.role-civilian {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 50, 100, 0.4));
+    border: 1px solid rgba(0, 212, 255, 0.5);
+}
+
+/* Le mot secret dans une "pilule" */
+.word-pill {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: inline-block;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+/* 2. Chat Window (Fenetre de discussion) */
+.chat-window {
+    background: rgba(0, 0, 0, 0.2); /* Fond très léger */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages-area {
+    height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 5px;
+    margin-bottom: 15px;
+    /* Scrollbar fine pour Chrome/Safari */
+    scrollbar-width: thin; 
+    scrollbar-color: var(--primary) transparent;
+}
+
+/* Style des bulles de message */
+.chat-bubble {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 10px 15px;
+    border-radius: 12px;
+    border-bottom-left-radius: 2px; /* Effet bulle */
+    color: #eee;
+    text-align: left;
+    font-size: 0.95rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-bubble strong {
+    color: var(--accent);
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+    opacity: 0.8;
+}
+
+/* Groupe Input + Bouton collés */
+.input-group {
+    display: flex;
+    gap: 0; /* Pas d'espace, ils sont collés */
+}
+
+.input-group input {
+    margin: 0;
+    border-radius: 12px 0 0 12px; /* Arrondi gauche seulement */
+    border-right: none;
+    background: rgba(0,0,0,0.4);
+}
+
+.input-group button {
+    margin: 0;
+    width: auto;
+    padding: 0 25px;
+    border-radius: 0 12px 12px 0; /* Arrondi droit seulement */
+}

@@ -23,7 +23,7 @@ if ($game['status'] == 'playing') {
 
 // Récupérer la liste des joueurs
 $stmt = $pdo->prepare("
-    SELECT users.username, users.id 
+    SELECT users.pseudo, users.id 
     FROM game_players 
     JOIN users ON game_players.user_id = users.id 
     WHERE game_players.game_id = ?
@@ -37,8 +37,12 @@ $is_host = ($game['host_id'] == $user_id);
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Lobby - Code: <?php echo $game['room_code']; ?></title>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - Imposteur</title>
+    
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
+    
     <link rel="stylesheet" href="style.css">
     <script>
         // Rafraîchir la page toutes les 3 secondes pour voir les nouveaux joueurs
@@ -49,18 +53,22 @@ $is_host = ($game['host_id'] == $user_id);
 </head>
 <body>
 <header>
-    <div class="logo">🕵️ L'IMPOSTEUR</div>
+    <a href="index.php" style="text-decoration: none;">
+        <img src="impostor_logo.png" alt="L'Imposteur" class="logo-img">
+    </a>
     
-    <?php if(isset($_SESSION['username'])): ?>
+    <?php if(isset($_SESSION['user_id'])): ?>
         <div class="header-right">
             <div class="user-pill">
-                <div class="avatar-circle"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
-                <?php echo htmlspecialchars($_SESSION['username']); ?>
+                <div class="avatar-circle">
+                    <?php echo strtoupper(substr($_SESSION['pseudo'], 0, 1)); ?>
+                </div>
+                <div style="text-align:left; line-height:1.2;">
+                    <span style="font-weight:bold;"><?php echo htmlspecialchars($_SESSION['pseudo']); ?></span>
+                    <span style="font-size:0.7rem; opacity:0.6; display:block;">#<?php echo $_SESSION['tag']; ?></span>
+                </div>
             </div>
-            
-            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter">
-                <i class="fi fi-br-exit"></i>
-            </a>
+            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter"><i class="fi fi-br-exit"></i></a>
         </div>
     <?php endif; ?>
 </header>
@@ -76,10 +84,10 @@ $is_host = ($game['host_id'] == $user_id);
                     <li>
                         <div style="display:flex; align-items:center;">
                             <div class="avatar-circle">
-                                <?php echo strtoupper(substr($p['username'], 0, 1)); ?>
+                                <?php echo strtoupper(substr($p['pseudo'], 0, 1)); ?>
                             </div>
                             <span style="font-weight:600; font-size:1.1rem;">
-                                <?php echo htmlspecialchars($p['username']); ?>
+                                <?php echo htmlspecialchars($p['pseudo']); ?>
                                 </span>
                         </div>
                         
@@ -100,7 +108,7 @@ $is_host = ($game['host_id'] == $user_id);
         <?php endif; ?>
         
         <br>
-        <a href="index.php" style="color: var(--danger);">Quitter le lobby</a>
+        <a href="index.php" class="btn-danger">Quitter le lobby</a>
     </div>
 </body>
 </html>

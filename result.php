@@ -11,13 +11,13 @@ $game = $stmt->fetch();
 $is_host = ($game['host_id'] == $user_id);
 
 // 1. Qui était l'imposteur ?
-$stmt = $pdo->prepare("SELECT user_id, username FROM game_players JOIN users ON users.id = game_players.user_id WHERE game_id = ? AND role = 'impostor'");
+$stmt = $pdo->prepare("SELECT user_id, pseudo FROM game_players JOIN users ON users.id = game_players.user_id WHERE game_id = ? AND role = 'impostor'");
 $stmt->execute([$game_id]);
 $impostor = $stmt->fetch();
 
 // 2. Récupérer TOUS les votes (Qui a voté qui)
 $sql = "
-    SELECT u1.username as voteur, u2.username as cible 
+    SELECT u1.pseudo as voteur, u2.pseudo as cible 
     FROM game_players gp
     JOIN users u1 ON gp.user_id = u1.id
     LEFT JOIN users u2 ON gp.vote_for = u2.id
@@ -41,8 +41,12 @@ $impostor_caught = ($most_voted_id == $impostor['user_id']);
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Résultats</title>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - Imposteur</title>
+    
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
+    
     <link rel="stylesheet" href="style.css">
     <script>
         setInterval(function() {
@@ -59,18 +63,22 @@ $impostor_caught = ($most_voted_id == $impostor['user_id']);
 </head>
 <body>
 <header>
-    <div class="logo">🕵️ L'IMPOSTEUR</div>
+    <a href="index.php" style="text-decoration: none;">
+        <img src="impostor_logo.png" alt="L'Imposteur" class="logo-img">
+    </a>
     
-    <?php if(isset($_SESSION['username'])): ?>
+    <?php if(isset($_SESSION['user_id'])): ?>
         <div class="header-right">
             <div class="user-pill">
-                <div class="avatar-circle"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
-                <?php echo htmlspecialchars($_SESSION['username']); ?>
+                <div class="avatar-circle">
+                    <?php echo strtoupper(substr($_SESSION['pseudo'], 0, 1)); ?>
+                </div>
+                <div style="text-align:left; line-height:1.2;">
+                    <span style="font-weight:bold;"><?php echo htmlspecialchars($_SESSION['pseudo']); ?></span>
+                    <span style="font-size:0.7rem; opacity:0.6; display:block;">#<?php echo $_SESSION['tag']; ?></span>
+                </div>
             </div>
-            
-            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter">
-                <i class="fi fi-br-exit"></i>
-            </a>
+            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter"><i class="fi fi-br-exit"></i></a>
         </div>
     <?php endif; ?>
 </header>
@@ -87,7 +95,7 @@ $impostor_caught = ($most_voted_id == $impostor['user_id']);
         <div style="background:#0f3460; padding:20px; border-radius:10px; margin:20px 0; border: 2px solid #ff4b5c;">
             <p style="margin:0; font-size:0.9rem;">L'imposteur était :</p>
             <h2 style="font-size: 2.5rem; margin:5px 0; color: #ff4b5c;">
-                <?php echo htmlspecialchars($impostor['username']); ?>
+                <?php echo htmlspecialchars($impostor['pseudo']); ?>
             </h2>
         </div>
 
@@ -111,7 +119,7 @@ $impostor_caught = ($most_voted_id == $impostor['user_id']);
         <?php endif; ?>
         
         <br>
-        <a href="index.php" style="color:#888; font-size:0.8rem;">Quitter vers l'accueil</a>
+        <a href="index.php" class="btn-secondary">Quitter vers l'accueil</a>
     </div>
 </body>
 </html>

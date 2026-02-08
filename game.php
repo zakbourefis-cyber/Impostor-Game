@@ -15,7 +15,7 @@ $has_voted = ($my_data['vote_for'] !== null); // Est-ce que j'ai déjà voté ?
 
 // Récupérer la liste des AUTRES joueurs pour le vote
 $stmt = $pdo->prepare("
-    SELECT gp.user_id, u.username 
+    SELECT gp.user_id, u.pseudo 
     FROM game_players gp 
     JOIN users u ON gp.user_id = u.id 
     WHERE gp.game_id = ? AND gp.user_id != ?
@@ -29,119 +29,133 @@ $other_players = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>Jeu en cours</title>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
     <link rel="stylesheet" href="style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Styles Chat (identiques à avant) */
-        #chat-container { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; text-align: left; }
-        #chat-box { height: 200px; overflow-y: scroll; border: 1px solid #444; padding: 10px; margin-bottom: 10px; background: #0f3460; display: flex; flex-direction: column; }
-        .message { margin-bottom: 5px; font-size: 0.9rem; }
-        
-        /* Styles Vote */
-        .vote-section { margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
-        .vote-btn { width: 100%; margin: 5px 0; background: #ff4b5c; border:none; padding:10px; color:white; border-radius:5px; cursor:pointer; }
-        .vote-btn:hover { background: #d43746; }
-        .disabled { opacity: 0.5; pointer-events: none; }
-    </style>
 </head>
 <body>
 <header>
-    <div class="logo">🕵️ L'IMPOSTEUR</div>
+    <a href="index.php" style="text-decoration: none;">
+        <img src="impostor_logo.png" alt="L'Imposteur" class="logo-img">
+    </a>
     
-    <?php if(isset($_SESSION['username'])): ?>
+    <?php if(isset($_SESSION['user_id'])): ?>
         <div class="header-right">
             <div class="user-pill">
-                <div class="avatar-circle"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
-                <?php echo htmlspecialchars($_SESSION['username']); ?>
+                <div class="avatar-circle">
+                    <?php echo strtoupper(substr($_SESSION['pseudo'], 0, 1)); ?>
+                </div>
+                <div style="text-align:left; line-height:1.2;">
+                    <span style="font-weight:bold;"><?php echo htmlspecialchars($_SESSION['pseudo']); ?></span>
+                    <span style="font-size:0.7rem; opacity:0.6; display:block;">#<?php echo $_SESSION['tag']; ?></span>
+                </div>
             </div>
-            
-            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter">
-                <i class="fi fi-br-exit"></i>
-            </a>
+            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter"><i class="fi fi-br-exit"></i></a>
         </div>
     <?php endif; ?>
 </header>
+
     <div class="container">
         
-        <div style="background: #0f3460; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); margin-bottom: 10px;">
+        <div class="role-card-modern <?php echo ($role == 'impostor') ? 'role-impostor' : 'role-civilian'; ?>">
             <?php if ($role == 'impostor'): ?>
-                <h2 style="color:var(--danger)">🤫 IMPOSTEUR</h2>
+                <h2 style="color:#ff4b5c; margin:0; text-transform:uppercase; letter-spacing:2px;">🤫 IMPOSTEUR</h2>
+                <p style="margin-top:5px; opacity:0.9;">Tu n'as pas le mot secret.<br>Fonds-toi dans la masse !</p>
             <?php else: ?>
-                <h2 style="color:var(--primary)">🕵️ CIVIL</h2>
-                <p>Mot : <strong><?php echo htmlspecialchars($word); ?></strong></p>
+                <h2 style="color:#00d4ff; margin:0; text-transform:uppercase; letter-spacing:2px;">🕵️ CIVIL</h2>
+                <p style="margin:5px 0;">Le mot secret est :</p>
+                <div class="word-pill blur" title="Survolez pour voir"><?php echo htmlspecialchars($word); ?></div>
             <?php endif; ?>
         </div>
 
-        <div id="chat-container">
-            <div id="chat-box"></div>
-            <div style="display:flex;">
-                <input type="text" id="msgInput" placeholder="Message..." style="margin:0;">
-                <button onclick="sendMessage()" class="btn-primary" style="width: 80px; margin:0;">Envoyer</button>
+        <div class="chat-window">
+            <div id="chat-box" class="chat-messages-area"></div>
+            
+            <div class="input-group">
+                <input type="text" id="msgInput" placeholder="Écrivez votre message..." autocomplete="off">
+                <button onclick="sendMessage()" class="btn-primary" style="background: var(--accent);"><i class="fi fi-br-paper-plane"></i></button>
             </div>
         </div>
 
-        <div class="vote-section" id="vote-area">
-            <h3>Qui est l'imposteur ?</h3>
+        <div class="vote-section" id="vote-area" style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+            <h3 style="margin-bottom: 15px;">Votez contre l'Imposteur</h3>
+            
             <?php if ($has_voted): ?>
-                <p>Vote enregistré. En attente des autres...</p>
+                <div style="background: rgba(0,255,0,0.1); padding:15px; border-radius:10px; border:1px solid #00ff00;">
+                    ✅ Vote enregistré. En attente des autres...
+                </div>
             <?php else: ?>
-                <?php foreach($other_players as $p): ?>
-                    <button class="vote-btn" onclick="castVote(<?php echo $p['user_id']; ?>)">
-                        Voter contre <?php echo htmlspecialchars($p['username']); ?>
-                    </button>
-                <?php endforeach; ?>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <?php foreach($other_players as $p): ?>
+                        <button class="btn-danger" style="margin:0; font-size:0.9rem;" onclick="castVote(<?php echo $p['user_id']; ?>)">
+                            <?php echo htmlspecialchars($p['pseudo']); ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
         </div>
     </div>
 
     <script>
         const gameId = <?php echo $game_id; ?>;
-        
-        // --- CHAT (Même logique) ---
+        const chatBox = document.getElementById('chat-box');
+
+        // --- CHAT ---
         function sendMessage() {
-            const msg = document.getElementById('msgInput').value;
+            const msgInput = document.getElementById('msgInput');
+            const msg = msgInput.value;
             if(msg.trim() === "") return;
+            
             const fd = new FormData(); fd.append('game_id', gameId); fd.append('message', msg);
             fetch('send_chat.php', { method: 'POST', body: fd }).then(() => {
-                document.getElementById('msgInput').value = ""; loadMessages();
+                msgInput.value = ""; loadMessages();
             });
         }
+
         function loadMessages() {
             fetch('get_chat.php?game_id=' + gameId).then(r => r.json()).then(data => {
-                const box = document.getElementById('chat-box'); box.innerHTML = "";
-                data.forEach(m => box.innerHTML += `<div class="message"><strong>${m.username}:</strong> ${m.message}</div>`);
+                const currentScroll = chatBox.scrollTop;
+                const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
+                
+                chatBox.innerHTML = "";
+                data.forEach(m => {
+                    // Création de la bulle HTML
+                    chatBox.innerHTML += `
+                        <div class="chat-bubble">
+                            <strong>${m.pseudo}</strong>
+                            ${m.message}
+                        </div>`;
+                });
+
+                // Auto-scroll seulement si on était déjà en bas (pour ne pas gêner la lecture)
+                if(isScrolledToBottom) chatBox.scrollTop = chatBox.scrollHeight;
             });
         }
-        setInterval(loadMessages, 2000);
+
+        // Touche Entrée
+        document.getElementById('msgInput').addEventListener("keypress", function(e) {
+            if (e.key === "Enter") sendMessage();
+        });
 
         // --- VOTE ---
         function castVote(targetId) {
             if(!confirm("Sûr de voter contre ce joueur ?")) return;
-
-            const fd = new FormData();
-            fd.append('game_id', gameId);
-            fd.append('target_id', targetId);
-
-            fetch('vote.php', { method: 'POST', body: fd })
-            .then(response => response.text())
-            .then(res => {
-                // On cache les boutons
-                document.getElementById('vote-area').innerHTML = "<p>A voté ! En attente des résultats...</p>";
+            const fd = new FormData(); fd.append('game_id', gameId); fd.append('target_id', targetId);
+            fetch('vote.php', { method: 'POST', body: fd }).then(() => {
+                location.reload(); // On recharge pour afficher le message de confirmation
             });
         }
 
-        // --- VÉRIFICATION FIN DE PARTIE ---
+        // --- STATUS CHECK ---
         function checkGameStatus() {
-            fetch('check_status.php?game_id=' + gameId)
-            .then(r => r.text())
-            .then(status => {
-                if(status.trim() === 'finished') {
-                    window.location.href = 'result.php?id=' + gameId;
-                }
+            fetch('check_status.php?game_id=' + gameId).then(r => r.text()).then(status => {
+                if(status.trim() === 'finished') window.location.href = 'result.php?id=' + gameId;
             });
         }
-        setInterval(checkGameStatus, 3000); // Vérifie toutes les 3s si le jeu est fini
 
+        setInterval(loadMessages, 2000);
+        setInterval(checkGameStatus, 3000);
+        loadMessages(); // Premier chargement
     </script>
 </body>
 </html>
