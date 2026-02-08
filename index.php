@@ -51,7 +51,7 @@ if (!isset($_SESSION['user_id'])) {
 </header>
 
     <div class="container">
-        <h1>Bienvenue, <?php echo htmlspecialchars($_SESSION['username']); ?> !</h1>
+        <h1>Bienvenue, <?php echo htmlspecialchars($_SESSION['pseudo']); ?> !</h1>
         <p>Prêt à jouer ?</p>
 
         <button class="btn-primary btn-pulse" onclick="window.location.href='quick_join.php'">

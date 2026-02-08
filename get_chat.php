@@ -6,7 +6,8 @@ if (!isset($_GET['game_id'])) die("Manque ID");
 $game_id = $_GET['game_id'];
 
 // On sélectionne le PSEUDO au lieu du USERNAME
-$sql = "SELECT cm.message, u.pseudo as username, cm.created_at 
+// Modifiez 'as username' par 'as pseudo' (ou enlevez l'alias)
+$sql = "SELECT cm.message, u.pseudo, cm.created_at 
         FROM chat_messages cm 
         JOIN users u ON cm.user_id = u.id 
         WHERE cm.game_id = ? 

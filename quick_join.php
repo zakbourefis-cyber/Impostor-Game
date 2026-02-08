@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+$pdo->query("DELETE FROM games WHERE status = 'waiting' AND last_updated < (NOW() - INTERVAL 1 MINUTE)");
+
 // 1. Chercher une partie PUBLIQUE (is_private = 0) et EN ATTENTE (waiting)
 // On prend la plus ancienne créée (pour remplir les premiers serveurs)
 $stmt = $pdo->prepare("SELECT * FROM games WHERE status = 'waiting' AND is_private = 0 ORDER BY created_at ASC LIMIT 1");

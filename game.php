@@ -97,65 +97,70 @@ $other_players = $stmt->fetchAll();
     </div>
 
     <script>
-        const gameId = <?php echo $game_id; ?>;
-        const chatBox = document.getElementById('chat-box');
+       const gameId = <?php echo $game_id; ?>;
+    const chatBox = document.getElementById('chat-box');
 
-        // --- CHAT ---
-        function sendMessage() {
-            const msgInput = document.getElementById('msgInput');
-            const msg = msgInput.value;
-            if(msg.trim() === "") return;
-            
-            const fd = new FormData(); fd.append('game_id', gameId); fd.append('message', msg);
-            fetch('send_chat.php', { method: 'POST', body: fd }).then(() => {
-                msgInput.value = ""; loadMessages();
-            });
+    // --- 1. LA PALETTE "TWITCH" (Couleurs vives pour fond sombre) ---
+    const nameColors = [
+        "#FF4500", // Orange Rouge
+        "#00FF7F", // Spring Green
+        "#00BFFF", // Deep Sky Blue
+        "#FFD700", // Gold
+        "#FF69B4", // Hot Pink
+        "#ADFF2F", // Green Yellow
+        "#FF6347", // Tomato
+        "#BA55D3", // Medium Orchid
+        "#00FFFF", // Cyan
+        "#F08080", // Light Coral
+        "#9370DB", // Medium Purple
+        "#7FFFD4"  // Aquamarine
+    ];
+
+    // --- 2. FONCTION MAGIQUE : Pseudo -> Couleur ---
+    function getColorFromPseudo(pseudo) {
+        let hash = 0;
+        // On transforme les lettres en nombre
+        for (let i = 0; i < pseudo.length; i++) {
+            hash = pseudo.charCodeAt(i) + ((hash << 5) - hash);
         }
+        // On s'assure que le nombre est positif et on choisit dans la liste
+        const index = Math.abs(hash % nameColors.length);
+        return nameColors[index];
+    }
 
-        function loadMessages() {
-            fetch('get_chat.php?game_id=' + gameId).then(r => r.json()).then(data => {
-                const currentScroll = chatBox.scrollTop;
-                const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
-                
-                chatBox.innerHTML = "";
-                data.forEach(m => {
-                    // Création de la bulle HTML
-                    chatBox.innerHTML += `
-                        <div class="chat-bubble">
-                            <strong>${m.pseudo}</strong>
-                            ${m.message}
-                        </div>`;
-                });
-
-                // Auto-scroll seulement si on était déjà en bas (pour ne pas gêner la lecture)
-                if(isScrolledToBottom) chatBox.scrollTop = chatBox.scrollHeight;
-            });
-        }
-
-        // Touche Entrée
-        document.getElementById('msgInput').addEventListener("keypress", function(e) {
-            if (e.key === "Enter") sendMessage();
+    // --- CHAT ---
+    function sendMessage() {
+        const msgInput = document.getElementById('msgInput');
+        const msg = msgInput.value;
+        if(msg.trim() === "") return;
+        
+        const fd = new FormData(); fd.append('game_id', gameId); fd.append('message', msg);
+        fetch('send_chat.php', { method: 'POST', body: fd }).then(() => {
+            msgInput.value = ""; loadMessages();
         });
+    }
 
-        // --- VOTE ---
-        function castVote(targetId) {
-            if(!confirm("Sûr de voter contre ce joueur ?")) return;
-            const fd = new FormData(); fd.append('game_id', gameId); fd.append('target_id', targetId);
-            fetch('vote.php', { method: 'POST', body: fd }).then(() => {
-                location.reload(); // On recharge pour afficher le message de confirmation
+    function loadMessages() {
+        fetch('get_chat.php?game_id=' + gameId).then(r => r.json()).then(data => {
+            const currentScroll = chatBox.scrollTop;
+            const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 10;
+            
+            chatBox.innerHTML = "";
+            data.forEach(m => {
+                // On calcule la couleur unique pour ce pseudo
+                const userColor = getColorFromPseudo(m.pseudo);
+
+                // On l'applique directement dans le style du <strong>
+                chatBox.innerHTML += `
+                    <div class="chat-bubble">
+                        <strong style="color: ${userColor}; text-shadow: 0 0 5px ${userColor}40;">${m.pseudo}</strong>
+                        ${m.message}
+                    </div>`;
             });
-        }
 
-        // --- STATUS CHECK ---
-        function checkGameStatus() {
-            fetch('check_status.php?game_id=' + gameId).then(r => r.text()).then(status => {
-                if(status.trim() === 'finished') window.location.href = 'result.php?id=' + gameId;
-            });
-        }
-
-        setInterval(loadMessages, 2000);
-        setInterval(checkGameStatus, 3000);
-        loadMessages(); // Premier chargement
+            if(isScrolledToBottom) chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    }
     </script>
 </body>
 </html>

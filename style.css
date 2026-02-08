@@ -303,3 +303,24 @@ li {
     padding: 0 25px;
     border-radius: 0 12px 12px 0; /* Arrondi droit seulement */
 }
+
+/* --- LIENS TEXTUELS (Se connecter, S'inscrire, Retour...) --- */
+a {
+    color: var(--accent); /* Bleu électrique (#00d4ff) */
+    text-decoration: none; /* Enlève le soulignement */
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--primary); /* Violet (#8e44ad) au survol */
+    text-shadow: 0 0 8px rgba(142, 68, 173, 0.6); /* Petite lueur néon */
+    transform: translateY(-1px); /* Petit effet de flottement */
+}
+
+/* --- PROTECTION DES BOUTONS --- */
+/* On s'assure que les boutons qui sont des liens (<a>) gardent leur texte blanc */
+a.btn-primary:hover, a.btn-danger:hover {
+    color: white; 
+    text-decoration: none;
+}

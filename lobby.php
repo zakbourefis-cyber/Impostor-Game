@@ -1,114 +1,121 @@
 <?php
-// lobby.php
 require 'db.php';
 session_start();
-
-if (!isset($_GET['id'])) {
-    header("Location: index.php");
-    exit;
-}
-
+if (!isset($_GET['id'])) header("Location: index.php");
 $game_id = $_GET['id'];
-$user_id = $_SESSION['user_id'];
 
-// Récupérer les infos de la partie
-$stmt = $pdo->prepare("SELECT * FROM games WHERE id = ?");
+// On récupère juste le code de la salle pour l'affichage initial
+$stmt = $pdo->prepare("SELECT room_code FROM games WHERE id = ?");
 $stmt->execute([$game_id]);
-$game = $stmt->fetch();
-
-if ($game['status'] == 'playing') {
-    header("Location: game.php?id=" . $game_id);
-    exit;
-}
-
-// Récupérer la liste des joueurs
-$stmt = $pdo->prepare("
-    SELECT users.pseudo, users.id 
-    FROM game_players 
-    JOIN users ON game_players.user_id = users.id 
-    WHERE game_players.game_id = ?
-");
-$stmt->execute([$game_id]);
-$players = $stmt->fetchAll();
-
-$is_host = ($game['host_id'] == $user_id);
+$room_code = $stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lobby - Imposteur</title>
-    
+    <meta charset="UTF-8">
+    <title>Lobby - Code: <?php echo $room_code; ?></title>
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
-    
     <link rel="stylesheet" href="style.css">
-    <script>
-        // Rafraîchir la page toutes les 3 secondes pour voir les nouveaux joueurs
-        setTimeout(function(){
-           location.reload();
-        }, 3000);
-    </script>
 </head>
 <body>
 <header>
-    <a href="index.php" style="text-decoration: none;">
-        <img src="impostor_logo.png" alt="L'Imposteur" class="logo-img">
-    </a>
-    
+    <a href="index.php"><img src="impostor_logo.png" alt="Logo" class="logo-img"></a>
     <?php if(isset($_SESSION['user_id'])): ?>
         <div class="header-right">
             <div class="user-pill">
-                <div class="avatar-circle">
-                    <?php echo strtoupper(substr($_SESSION['pseudo'], 0, 1)); ?>
-                </div>
+                <div class="avatar-circle"><?php echo strtoupper(substr($_SESSION['pseudo'], 0, 1)); ?></div>
                 <div style="text-align:left; line-height:1.2;">
                     <span style="font-weight:bold;"><?php echo htmlspecialchars($_SESSION['pseudo']); ?></span>
                     <span style="font-size:0.7rem; opacity:0.6; display:block;">#<?php echo $_SESSION['tag']; ?></span>
                 </div>
             </div>
-            <a href="logout.php" class="logout-btn-icon" title="Se déconnecter"><i class="fi fi-br-exit"></i></a>
+            <a href="logout.php" class="logout-btn-icon"><i class="fi fi-br-exit"></i></a>
         </div>
     <?php endif; ?>
 </header>
-    <div class="container">
-        <p>CODE DE LA SALLE</p>
-        <h1 style="font-size: 3rem; margin: 10px 0; letter-spacing: 5px; color: var(--primary);">
-            <?php echo $game['room_code']; ?>
-        </h1>
 
-        <h3>Joueurs (<?php echo count($players); ?>)</h3>
-            <ul style="list-style: none; padding: 0;">
-                <?php foreach ($players as $p): ?>
+<div class="container">
+    <p>CODE DE LA SALLE</p>
+    <h1 style="font-size: 3rem; margin: 10px 0; letter-spacing: 5px; color: var(--primary);">
+        <?php echo $room_code; ?>
+    </h1>
+
+    <h3>Joueurs (<span id="player-count">0</span>)</h3>
+    
+    <ul id="player-list" style="list-style: none; padding: 0;"></ul>
+
+    <div id="host-controls"></div>
+    
+    <p id="guest-message" style="display:none;">En attente de l'hôte...</p>
+    
+    <br>
+    <a href="index.php" class="btn-danger">Quitter le lobby</a>
+</div>
+
+<script>
+    const gameId = <?php echo $game_id; ?>;
+    const playerListEl = document.getElementById('player-list');
+    const countEl = document.getElementById('player-count');
+    const hostControlsEl = document.getElementById('host-controls');
+    const guestMessageEl = document.getElementById('guest-message');
+
+    function refreshLobby() {
+        // On appelle l'API au lieu de recharger la page
+        fetch('api_lobby.php?id=' + gameId)
+        .then(response => response.json())
+        .then(data => {
+            
+            // 1. Si la partie est lancée -> On y va !
+            if (data.status === 'playing') {
+                window.location.href = 'game.php?id=' + gameId;
+                return;
+            }
+
+            // 2. Mettre à jour la liste des joueurs
+            countEl.innerText = data.players.length;
+            playerListEl.innerHTML = ""; // On vide la liste
+            
+            data.players.forEach(p => {
+                const isHost = (p.id == data.host_id);
+                const crown = isHost ? "<span title='Hôte'>👑</span>" : "";
+                
+                // On recrée le HTML pour chaque joueur
+                playerListEl.innerHTML += `
                     <li>
                         <div style="display:flex; align-items:center;">
-                            <div class="avatar-circle">
-                                <?php echo strtoupper(substr($p['pseudo'], 0, 1)); ?>
-                            </div>
+                            <div class="avatar-circle">${p.pseudo.charAt(0).toUpperCase()}</div>
                             <span style="font-weight:600; font-size:1.1rem;">
-                                <?php echo htmlspecialchars($p['pseudo']); ?>
-                                </span>
+                                ${p.pseudo}
+                            </span>
                         </div>
-                        
-                        <?php if($game['host_id'] == $p['id']) echo "<span title='Hôte'>👑</span>"; ?>
+                        ${crown}
                     </li>
-                <?php endforeach; ?>
-            </ul>
+                `;
+            });
 
-        <?php if($is_host): ?>
-            <p style="font-size: 0.8rem; color: #888;">Vous êtes l'hôte</p>
-            <?php if(count($players) >= 3): ?>
-                <a href="start_game.php?id=<?php echo $game_id; ?>" class="btn-primary">Lancer la partie</a>
-            <?php else: ?>
-                <button class="btn-secondary" disabled>En attente de joueurs (min 3)...</button>
-            <?php endif; ?>
-        <?php else: ?>
-            <p>En attente de l'hôte...</p>
-        <?php endif; ?>
-        
-        <br>
-        <a href="index.php" class="btn-danger">Quitter le lobby</a>
-    </div>
+            // 3. Gestion bouton Hôte / Invité
+            if (data.current_user_id == data.host_id) {
+                guestMessageEl.style.display = 'none';
+                if (data.players.length >= 3) {
+                    hostControlsEl.innerHTML = `<a href="start_game.php?id=${gameId}" class="btn-primary">Lancer la partie</a>`;
+                } else {
+                    hostControlsEl.innerHTML = `<button class="btn-secondary" disabled>En attente de joueurs (min 3)...</button>`;
+                }
+            } else {
+                hostControlsEl.innerHTML = "";
+                guestMessageEl.style.display = 'block';
+            }
+        })
+        .catch(err => console.error("Erreur chargement lobby", err));
+    }
+
+    // On rafraîchit toutes les 1 seconde (C'est fluide car ça ne clignote pas !)
+    setInterval(refreshLobby, 1000);
+    
+    // Premier appel immédiat
+    refreshLobby();
+</script>
+
 </body>
 </html>

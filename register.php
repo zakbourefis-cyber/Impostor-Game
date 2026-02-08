@@ -56,12 +56,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h1>Créer un compte</h1>
         <?php if(isset($error)) echo "<div class='error'>$error</div>"; ?>
         <form method="POST">
-            <label style="text-align:left; display:block; color:#aaa; font-size:0.8rem; margin-left:5px;">Identifiant de Connexion (Unique)</label>
-            <input type="text" name="username" placeholder="ex: zak_login_74" required>
+            <label style="text-align:left; display:block; color:#aaa; font-size:0.8rem; margin-left:5px;">Identifiant de Connexion</label>
+            <input type="text" name="username" placeholder="ex: mon_mail@mail.com" required>
             
-            <label style="text-align:left; display:block; color:#aaa; font-size:0.8rem; margin-left:5px;">Pseudo en Jeu (Visible)</label>
-            <input type="text" name="pseudo" placeholder="ex: TueurDeLimonade" required>
+            <label style="text-align:left; display:block; color:#aaa; font-size:0.8rem; margin-left:5px;">Pseudo en Jeu</label>
+            <input type="text" name="pseudo" placeholder="ex: Arracheur2Banoune" required>
             
+            <label style="text-align:left; display:block; color:#aaa; font-size:0.8rem; margin-left:5px;">Mot de passe</label>
             <input type="password" name="password" placeholder="Mot de passe" required>
             <button type="submit" class="btn-primary">S'inscrire</button>
         </form>
