@@ -190,7 +190,7 @@ li {
 
 /* --- LOGO EN IMAGE --- */
 .logo-img {
-    height: 50px; /* Ajuste la hauteur selon ton image */
+    height: 25px; /* Ajuste la hauteur selon ton image */
     width: auto;  /* Garde les proportions */
     transition: transform 0.3s ease;
     display: block; /* Évite les espaces fantômes sous l'image */

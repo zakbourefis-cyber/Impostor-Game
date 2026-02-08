@@ -3,7 +3,7 @@
 require 'db.php';
 session_start();
 
-if (!isset($_GET['game_id'])) exit;
+if (!isset($_GET['id'])) exit;
 
 $game_id = $_GET['id']; // Attention: dans ton JS on enverra ?id=...
 $user_id = $_SESSION['user_id'];

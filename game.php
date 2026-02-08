@@ -96,39 +96,27 @@ $other_players = $stmt->fetchAll();
         </div>
     </div>
 
-    <script>
-       const gameId = <?php echo $game_id; ?>;
+<script>
+    const gameId = <?php echo $game_id; ?>;
     const chatBox = document.getElementById('chat-box');
 
-    // --- 1. LA PALETTE "TWITCH" (Couleurs vives pour fond sombre) ---
+    // --- 1. COULEURS PSEUDOS ---
     const nameColors = [
-        "#FF4500", // Orange Rouge
-        "#00FF7F", // Spring Green
-        "#00BFFF", // Deep Sky Blue
-        "#FFD700", // Gold
-        "#FF69B4", // Hot Pink
-        "#ADFF2F", // Green Yellow
-        "#FF6347", // Tomato
-        "#BA55D3", // Medium Orchid
-        "#00FFFF", // Cyan
-        "#F08080", // Light Coral
-        "#9370DB", // Medium Purple
-        "#7FFFD4"  // Aquamarine
+        "#FF4500", "#00FF7F", "#00BFFF", "#FFD700", 
+        "#FF69B4", "#ADFF2F", "#FF6347", "#BA55D3", 
+        "#00FFFF", "#F08080", "#9370DB", "#7FFFD4"
     ];
 
-    // --- 2. FONCTION MAGIQUE : Pseudo -> Couleur ---
     function getColorFromPseudo(pseudo) {
         let hash = 0;
-        // On transforme les lettres en nombre
         for (let i = 0; i < pseudo.length; i++) {
             hash = pseudo.charCodeAt(i) + ((hash << 5) - hash);
         }
-        // On s'assure que le nombre est positif et on choisit dans la liste
         const index = Math.abs(hash % nameColors.length);
         return nameColors[index];
     }
 
-    // --- CHAT ---
+    // --- 2. CHAT ---
     function sendMessage() {
         const msgInput = document.getElementById('msgInput');
         const msg = msgInput.value;
@@ -147,10 +135,7 @@ $other_players = $stmt->fetchAll();
             
             chatBox.innerHTML = "";
             data.forEach(m => {
-                // On calcule la couleur unique pour ce pseudo
                 const userColor = getColorFromPseudo(m.pseudo);
-
-                // On l'applique directement dans le style du <strong>
                 chatBox.innerHTML += `
                     <div class="chat-bubble">
                         <strong style="color: ${userColor}; text-shadow: 0 0 5px ${userColor}40;">${m.pseudo}</strong>
@@ -161,6 +146,31 @@ $other_players = $stmt->fetchAll();
             if(isScrolledToBottom) chatBox.scrollTop = chatBox.scrollHeight;
         });
     }
+
+    // --- 3. VOTE & JEU ---
+    function castVote(targetId) {
+        if(!confirm("Sûr de voter contre ce joueur ?")) return;
+        const fd = new FormData(); fd.append('game_id', gameId); fd.append('target_id', targetId);
+        fetch('vote.php', { method: 'POST', body: fd }).then(() => {
+            location.reload(); 
+        });
+    }
+
+    function checkGameStatus() {
+        fetch('check_status.php?game_id=' + gameId).then(r => r.text()).then(status => {
+            if(status.trim() === 'finished') window.location.href = 'result.php?id=' + gameId;
+        });
+    }
+
+    // --- 4. LE MOTEUR (C'est ce qui manquait !) ---
+    document.getElementById('msgInput').addEventListener("keypress", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    setInterval(loadMessages, 200);
+    setInterval(checkGameStatus, 500); // Vérifie si le jeu est fini toutes les 3s
+    
+    loadMessages(); // Premier chargement immédiat
     </script>
 </body>
 </html>

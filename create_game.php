@@ -1,29 +1,24 @@
 <?php
-// create_game.php
 require 'db.php';
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
+if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
 
-// Récupérer le choix (Par défaut Privée si non précisé)
 $is_private = isset($_GET['private']) ? (int)$_GET['private'] : 1;
+$max_players = isset($_GET['max_players']) ? (int)$_GET['max_players'] : 10;
 
-// 1. Générer un Code Room unique
+// Générer Code
 $room_code = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 5);
 
-// 2. Créer la partie avec le statut PRIVÉ ou PUBLIC
-$stmt = $pdo->prepare("INSERT INTO games (room_code, host_id, status, is_private) VALUES (?, ?, 'waiting', ?)");
-$stmt->execute([$room_code, $_SESSION['user_id'], $is_private]);
+// Créer la partie avec max_players
+$stmt = $pdo->prepare("INSERT INTO games (room_code, host_id, status, is_private, max_players) VALUES (?, ?, 'waiting', ?, ?)");
+$stmt->execute([$room_code, $_SESSION['user_id'], $is_private, $max_players]);
 $game_id = $pdo->lastInsertId();
 
-// 3. Ajouter le créateur (Host)
+// Ajouter l'hôte
 $stmt = $pdo->prepare("INSERT INTO game_players (game_id, user_id, role) VALUES (?, ?, 'player')");
 $stmt->execute([$game_id, $_SESSION['user_id']]);
 
-// 4. Rediriger vers le lobby
 header("Location: lobby.php?id=" . $game_id);
 exit;
 ?>
