@@ -4,17 +4,20 @@ session_start();
 if (!isset($_GET['id'])) header("Location: index.php");
 $game_id = $_GET['id'];
 
-// On récupère juste le code de la salle pour l'affichage initial
-$stmt = $pdo->prepare("SELECT room_code FROM games WHERE id = ?");
+// 1. On récupère le code ET le statut privé/public
+$stmt = $pdo->prepare("SELECT room_code, is_private FROM games WHERE id = ?");
 $stmt->execute([$game_id]);
-$room_code = $stmt->fetchColumn();
+$game_info = $stmt->fetch();
+
+$room_code = $game_info['room_code'];
+$is_private = $game_info['is_private'];
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Lobby - Code: <?php echo $room_code; ?></title>
+    <title>Lobby - Imposteur</title>
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -36,11 +39,18 @@ $room_code = $stmt->fetchColumn();
 </header>
 
 <div class="container">
-    <p>CODE DE LA SALLE</p>
-    <h1 style="font-size: 3rem; margin: 10px 0; letter-spacing: 5px; color: var(--primary);">
-        <?php echo $room_code; ?>
-    </h1>
-
+    
+    <?php if($is_private): ?>
+        <p>CODE DE LA SALLE</p>
+        <h1 style="font-size: 3rem; margin: 10px 0; letter-spacing: 5px; color: var(--primary);">
+            <?php echo $room_code; ?>
+        </h1>
+    <?php else: ?>
+        <p>TYPE DE SALLE</p>
+        <h1 style="font-size: 2rem; margin: 10px 0; color: var(--accent);">
+            🌍 SALON PUBLIC
+        </h1>
+    <?php endif; ?>
     <h3>Joueurs (<span id="player-count">0</span>)</h3>
     
     <ul id="player-list" style="list-style: none; padding: 0;"></ul>
@@ -50,7 +60,7 @@ $room_code = $stmt->fetchColumn();
     <p id="guest-message" style="display:none;">En attente de l'hôte...</p>
     
     <br>
-    <a href="index.php" class="btn-danger">Quitter le lobby</a>
+    <a href="leave_game.php" class="btn-danger">Quitter le lobby</a>
 </div>
 
 <script>
@@ -66,7 +76,13 @@ $room_code = $stmt->fetchColumn();
         .then(response => response.json())
         .then(data => {
             
-            // 1. Si la partie est lancée -> On y va !
+            if (data.status === 'deleted') {
+                alert("L'hôte a quitté la partie !");
+                window.location.href = 'index.php';
+                return;
+            }
+
+            // Si la partie est lancée -> On y va !
             if (data.status === 'playing') {
                 window.location.href = 'game.php?id=' + gameId;
                 return;

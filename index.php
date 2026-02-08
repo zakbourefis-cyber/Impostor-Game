@@ -1,24 +1,7 @@
 <?php
-require 'db.php'; 
+require 'db.php';
 session_start();
 if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
-
-// --- RECUPERER LES SALONS PUBLICS ---
-// On ajoute la récupération des pseudos (GROUP_CONCAT)
-$sql = "
-    SELECT g.*, u.pseudo as host_name, 
-    (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as player_count,
-    (SELECT GROUP_CONCAT(users.pseudo SEPARATOR ', ') 
-     FROM game_players 
-     JOIN users ON game_players.user_id = users.id 
-     WHERE game_players.game_id = g.id) as player_names
-    FROM games g 
-    JOIN users u ON g.host_id = u.id 
-    WHERE g.status = 'waiting' AND g.is_private = 0 
-    ORDER BY g.created_at DESC
-";
-$stmt = $pdo->query($sql);
-$public_games = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -59,26 +42,26 @@ $public_games = $stmt->fetchAll();
             justify-content: space-between;
             align-items: center;
             transition: 0.3s;
+            animation: fadeIn 0.5s ease;
         }
         .server-card:hover {
             background: rgba(255,255,255,0.1);
             transform: translateX(5px);
         }
         .server-info {
-            flex-grow: 1; /* Prend toute la place dispo à gauche */
+            flex-grow: 1;
             margin-right: 15px;
+            overflow: hidden;
         }
         .server-info h4 { margin: 0; color: var(--accent); font-size: 1.1rem; }
         
-        /* Style pour la liste des joueurs */
         .player-preview {
             font-size: 0.85rem; 
             color: #aaa; 
             margin-top: 5px;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis; /* Met "..." si la liste est trop longue */
-            max-width: 250px; /* Largeur max avant de couper */
+            text-overflow: ellipsis;
             display: block;
         }
 
@@ -90,6 +73,8 @@ $public_games = $stmt->fetchAll();
             font-size: 0.9rem;
             white-space: nowrap;
         }
+        
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
@@ -129,43 +114,73 @@ $public_games = $stmt->fetchAll();
             🌍 Salons Publics
         </h3>
         
-        <div class="server-list">
-            <?php if (count($public_games) > 0): ?>
-                <?php foreach($public_games as $game): ?>
-                    <?php 
-                        $is_full = ($game['player_count'] >= $game['max_players']); 
-                        $percent = ($game['player_count'] / $game['max_players']) * 100;
-                        $color = ($percent > 80) ? '#ff4b5c' : '#00d4ff';
-                    ?>
-                    <div class="server-card">
-                        <div class="server-info">
-                            <h4>Salon de <?php echo htmlspecialchars($game['host_name']); ?></h4>
-                            <span class="player-preview">
-                                👥 <?php echo htmlspecialchars($game['player_names']); ?>
-                            </span>
-                        </div>
-                        
-                        <div style="text-align:right;">
-                            <div class="server-status" style="color: <?php echo $color; ?>; border: 1px solid <?php echo $color; ?>;">
-                                <?php echo $game['player_count']; ?> / <?php echo $game['max_players']; ?>
-                            </div>
-                            
-                            <?php if(!$is_full): ?>
-                                <a href="join_room.php?id=<?php echo $game['id']; ?>" 
-                                   style="font-size:0.8rem; display:block; margin-top:5px; color:white; text-decoration:underline;">
-                                   Rejoindre ->
-                                </a>
-                            <?php else: ?>
-                                <span style="font-size:0.8rem; display:block; margin-top:5px; color:#666;">Complet</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p style="color:#666; font-style:italic;">Aucune partie publique en attente...</p>
-            <?php endif; ?>
+        <div class="server-list" id="server-list-container">
+            <p style="color:#888; font-style:italic;">Chargement des parties...</p>
         </div>
 
     </div>
+
+<script>
+    function loadServers() {
+        fetch('api_server_list.php')
+        .then(response => response.json())
+        .then(games => {
+            const container = document.getElementById('server-list-container');
+            
+            if (games.length === 0) {
+                container.innerHTML = '<p style="color:#666; font-style:italic;">Aucune partie publique en attente...</p>';
+                return;
+            }
+
+            let html = '';
+            games.forEach(game => {
+                // Logique d'affichage (Couleur, pourcentage...)
+                const isFull = (game.player_count >= game.max_players);
+                const percent = (game.player_count / game.max_players) * 100;
+                const color = (percent > 80) ? '#ff4b5c' : '#00d4ff'; // Rouge si presque plein, sinon bleu
+                
+                // Construction du bouton Rejoindre ou Complet
+                let actionButton = '';
+                if (!isFull) {
+                    actionButton = `
+                        <a href="join_room.php?id=${game.id}" 
+                           style="font-size:0.8rem; display:block; margin-top:5px; color:white; text-decoration:underline;">
+                           Rejoindre ->
+                        </a>`;
+                } else {
+                    actionButton = `<span style="font-size:0.8rem; display:block; margin-top:5px; color:#666;">Complet</span>`;
+                }
+
+                // Construction de la carte HTML
+                html += `
+                    <div class="server-card">
+                        <div class="server-info">
+                            <h4>Salon de ${game.host_name}</h4>
+                            <span class="player-preview" title="${game.player_names}">
+                                👥 ${game.player_names}
+                            </span>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="server-status" style="color: ${color}; border: 1px solid ${color};">
+                                ${game.player_count} / ${game.max_players}
+                            </div>
+                            ${actionButton}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // On met à jour le contenu seulement si ça a changé pour éviter les micro-sauts
+            // Mais ici on remplace tout pour faire simple, c'est très rapide.
+            container.innerHTML = html;
+        })
+        .catch(err => console.error("Erreur chargement serveurs", err));
+    }
+
+    // Charger immédiatement
+    loadServers();
+    // Puis rafraîchir toutes les 2 secondes
+    setInterval(loadServers, 2000);
+</script>
 </body>
 </html>
